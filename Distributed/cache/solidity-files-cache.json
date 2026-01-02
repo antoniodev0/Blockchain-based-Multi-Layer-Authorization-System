@@ -1,0 +1,77 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/antonio/Desktop/UNI/Distributed/contracts/delegationHub.sol": {
+      "lastModificationDate": 1767357004320,
+      "contentHash": "b6fc1414b931dd65d8007a7ed8e70c2f",
+      "sourceName": "contracts/delegationHub.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "DelegationHub"
+      ]
+    },
+    "/Users/antonio/Desktop/UNI/Distributed/contracts/entityStorage.sol": {
+      "lastModificationDate": 1767346661075,
+      "contentHash": "393c45dddd600e07d4e7f99f97f15bf5",
+      "sourceName": "contracts/entityStorage.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "EntityStorage"
+      ]
+    }
+  }
+}
