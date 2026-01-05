@@ -1,22 +1,20 @@
 const hre = require("hardhat");
+const fs = require("fs");
 
 async function main() {
-  console.log("Inizio il deploy su TOP LAYER...");
-
-  // Prende il contratto compilato
   const DelegationHub = await hre.ethers.getContractFactory("DelegationHub");
-  
-  // Lo invia alla blockchain
   const contract = await DelegationHub.deploy();
-
-  // Attende che sia confermato
   await contract.waitForDeployment();
+  const address = contract.target;
+  console.log("DelegationHub (Top) address:", address);
 
-  console.log("DelegationHub deployato con successo!");
-  console.log("INDIRIZZO CONTRATTO (Salviamolo):", contract.target);
+  // LEGGIAMO O CREIAMO IL CONFIG
+  let config = {};
+  if (fs.existsSync("config.json")) {
+    config = JSON.parse(fs.readFileSync("config.json"));
+  }
+  config.topLayer = address; // Aggiorniamo solo il top layer
+  fs.writeFileSync("config.json", JSON.stringify(config, null, 2));
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch((error) => { console.error(error); process.exitCode = 1; });

@@ -1,62 +1,52 @@
 const hre = require("hardhat");
+const fs = require("fs");
+const iam = require("./iam_check"); // Usa la libreria IAM
 
 async function main() {
-  console.log("Avvio del Middleware (Il Ponte tra le Blockchain)...");
-
-  // 1. CONFIGURAZIONE INDIRIZZI (Quelli che mi hai dato)
-  const TOP_LAYER_ADDR = "0xe74541fd0076C8308447bcEA77E9f1E1039Df153";
-  const COLORED_CHAIN_ADDR = "0x3B040f17b35131BFac1d74A341b601439c95465b";
-
-  // 2. CONFIGURAZIONE PROVIDER (Le connessioni alle due porte)
-  // Usiamo JsonRpcProvider per connetterci manualmente alle due porte diverse
+  const config = JSON.parse(fs.readFileSync("config.json"));
+  
+  // Provider
   const providerTop = new hre.ethers.JsonRpcProvider("http://127.0.0.1:7545");
-  const providerColored = new hre.ethers.JsonRpcProvider("http://127.0.0.1:8545");
+  const providerCol = new hre.ethers.JsonRpcProvider("http://127.0.0.1:8545");
 
-  // 3. RECUPERO GLI "ARTIFACTS" (Il libretto di istruzioni dei contratti)
+  // Contratti
   const TopArtifact = await hre.artifacts.readArtifact("DelegationHub");
-  const ColoredArtifact = await hre.artifacts.readArtifact("EntityStorage");
+  const ColArtifact = await hre.artifacts.readArtifact("EntityStorage");
+  const topContract = new hre.ethers.Contract(config.topLayer, TopArtifact.abi, providerTop);
+  const colContract = new hre.ethers.Contract(config.coloredChain, ColArtifact.abi, providerCol);
 
-  // 4. CREAZIONE DELLE ISTANZE DEI CONTRATTI (In sola lettura per il middleware)
-  const topContract = new hre.ethers.Contract(TOP_LAYER_ADDR, TopArtifact.abi, providerTop);
-  const coloredContract = new hre.ethers.Contract(COLORED_CHAIN_ADDR, ColoredArtifact.abi, providerColored);
+  console.log("📡 MIDDLEWARE ATTIVO (Blockchain + Keycloak)...");
 
-  console.log("In ascolto di eventi sulla Top Layer (Porta 7545)...");
-
-  // 5. IL CUORE DELLA PIPELINE: ASCOLTO EVENTI
-  // Ascoltiamo l'evento "AccessCheckResult" emesso dalla funzione verifyDocumentAccess
+  // LISTENER
   topContract.on("AccessCheckResult", async (txHash, requestor, allowed) => {
-    console.log(`\n🔔 EVENTO RICEVUTO DALLA TOP LAYER!`);
-    console.log(`   - Richiedente: ${requestor}`);
-    console.log(`   - Hash Documento Richiesto: ${txHash}`);
-    console.log(`   - Accesso Consentito? ${allowed ? "SÌ" : "NO"}`);
+    if (!allowed) {
+        console.log(`⛔ BLOCKCHAIN: Accesso negato dallo Smart Contract per ${requestor}`);
+        return;
+    }
 
-    if (allowed) {
-      console.log("Attivazione Pipeline verso Colored Chain...");
-      
-      try {
-        // Interrogo la Colored Chain (Porta 8545)
-        const docData = await coloredContract.getDocument(txHash);
-        
-        console.log("\nDOCUMENTO RECUPERATO CON SUCCESSO:");
-        console.log("   ------------------------------------------------");
-        console.log(`   [IPFS Link]:   ${docData[0]}`); // Primo valore di ritorno
-        console.log(`   [Descrizione]: ${docData[1]}`); // Secondo valore
-        console.log(`   [Timestamp]:   ${docData[2]}`); // Terzo valore
-        console.log("   ------------------------------------------------");
-        console.log("Pipeline completata. Dati inviati all'utente.\n");
+    console.log(`\n🔔 BLOCKCHAIN: Accesso Consentito (Delega OK).`);
+    console.log("👮 IAM: Controllo identità utente fisico...");
 
-      } catch (error) {
-        console.error("⚠️ Errore: Impossibile trovare il documento sulla Colored Chain (o errore di connessione).");
-        // console.error(error); // Decommenta per dettagli tecnici
-      }
+    if (!fs.existsSync("user_token.jwt")) {
+        console.log("❌ ERRORE: Nessun utente loggato.");
+        return;
+    }
+
+    const token = fs.readFileSync("user_token.jwt", "utf8");
+    const check = await iam.checkUser(token);
+
+    if (check.authorized) {
+        console.log(`✅ IAM: Utente autorizzato (${check.role}). Recupero dati...`);
+        try {
+            const doc = await colContract.getDocument(txHash);
+            console.log("📄 DATI RESTITUITI ALL'UTENTE:");
+            console.log(`   - Descrizione: ${doc[2]}`);
+            console.log(`   - IPFS: ${doc[0]}`);
+            console.log(`   - MD5:  ${doc[1]}`);
+        } catch (e) { console.error("Errore storage:", e.message); }
     } else {
-      console.log("Pipeline bloccata: L'utente non ha i permessi.");
+        console.log(`⛔ IAM: Bloccato. Ruolo '${check.role}' insufficiente.`);
     }
   });
 }
-
-// Gestione errori avvio
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch((error) => { console.error(error); process.exitCode = 1; });

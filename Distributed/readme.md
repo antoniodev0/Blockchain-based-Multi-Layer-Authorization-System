@@ -1,105 +1,76 @@
 # Blockchain-based Multi-Layer Authorization System
 
-Questo progetto implementa un'architettura Cross-Chain per la gestione sicura di dati sensibili (come certificati accademici) utilizzando il paradigma Top Layer (Governance) e Colored Chains (Storage).
-
-L'obiettivo è risolvere le problematiche di privacy e scalabilità separando la logica di autorizzazione dalla memorizzazione fisica dei dati, permettendo una gestione granulare dei permessi tramite Smart Contracts.
+Questo progetto implementa un'architettura Cross-Chain integrata con un sistema IAM (Identity and Access Management) per la gestione sicura di dati sensibili. Utilizza un paradigma a livelli che separa la governance, lo storage dei dati e l'identità degli utenti fisici.
 
 ## Architettura del Sistema
 
-Il sistema si basa su due Blockchain distinte che comunicano attraverso un Middleware off-chain, realizzando una pipeline di esecuzione:
+Il sistema si compone di quattro pilastri fondamentali:
 
 1.  **Top Layer (Governance Chain - Porta 7545)**
-    *   Gestisce le Identità e i Permessi (Delega).
+    *   Blockchain pubblica (simulata) per la gestione delle deleghe tra enti.
     *   Ospita lo Smart Contract `DelegationHub`.
-    *   Non contiene dati sensibili, ma solo le regole di accesso e gli hash di verifica.
 
 2.  **Colored Chain (Data Chain - Porta 8545)**
-    *   Rappresenta la blockchain privata di un ente specifico (es. Università).
-    *   Ospita lo Smart Contract `EntityStorage`.
-    *   Contiene i metadati dei documenti (Hash, Link IPFS).
+    *   Blockchain privata per lo storage dei metadati documentali.
+    *   Ospita lo Smart Contract `EntityStorage` (include Hash IPFS e MD5).
 
-3.  **Middleware (Pipeline Bridge)**
-    *   Un servizio Node.js che ascolta gli eventi sulla Top Layer.
-    *   Agisce come un oracolo inverso: interroga la Colored Chain solo se rileva un evento di autorizzazione valido sulla Top Layer.
+3.  **Identity Provider (Keycloak - Docker)**
+    *   Gestisce l'autenticazione degli utenti fisici (es. dipendenti dell'ente).
+    *   Fornisce token JWT con ruoli specifici (es. `admin_documenti`, `stagista`).
+
+4.  **Middleware (Pipeline Bridge)**
+    *   Servizio Node.js che orchestra il flusso. Ascolta la Blockchain, verifica il Token IAM dell'utente e, solo se entrambi i controlli passano, recupera i dati dallo storage.
 
 ---
 
 ## Struttura del Progetto e Descrizione File
 
-Di seguito viene spiegata la funzione di ogni file presente nel progetto.
-
 ### Smart Contracts (Cartella `contracts/`)
+*   **`DelegationHub.sol`**: Gestisce le deleghe temporali multilivello. Emette l'evento `AccessCheckResult` usato come trigger.
+*   **`EntityStorage.sol`**: Registro immutabile dei documenti. Salva Link IPFS, Hash MD5 e Descrizione.
 
-*   **`DelegationHub.sol` (Top Layer)**
-    *   **Scopo:** Gestisce il controllo degli accessi (RBAC - Role Based Access Control).
-    *   **Funzionamento:** Permette agli utenti di delegare enti terzi per un periodo di tempo limitato. Quando un ente richiede l'accesso, questo contratto verifica la validità della delega ed emette l'evento `AccessCheckResult`. Questo evento è il segnale che attiva il Middleware.
-
-*   **`EntityStorage.sol` (Colored Chain)**
-    *   **Scopo:** Funge da registro immutabile per i documenti.
-    *   **Funzionamento:** Associa un identificativo di transazione (TX Hash) ai dati reali (es. Link IPFS). Viene interrogato dal Middleware solo dopo che la verifica sul Top Layer ha avuto successo.
-
-### Script di Integrazione (Cartella `scripts/`)
-
-*   **`middleware.js`**
-    *   È il componente centrale del progetto. Connette le due blockchain.
-    *   Rimane in ascolto sulla porta 7545 (Top Layer). Quando riceve l'evento di accesso consentito, esegue una chiamata verso la porta 8545 (Colored Chain) per recuperare il documento. Realizza concretamente il concetto di "Pipeline".
-
-*   **`upload_data.js`**
-    *   Script utilizzato dal proprietario dei dati per caricare un nuovo certificato sulla Colored Chain.
-
-*   **`verify_access.js`**
-    *   Script utilizzato dall'ente verificatore (es. Università). Interagisce solo con la Top Layer per richiedere il permesso di lettura.
-
-*   **`deploy_top.js` & `deploy_colored.js`**
-    *   Script di configurazione per pubblicare i contratti sulle rispettive blockchain.
+### Script Operativi (Cartella `scripts/`)
+*   **`middleware.js`**: Il cuore del sistema. Unisce il mondo Blockchain con quello IAM.
+*   **`iam_login.js`**: Client per effettuare il login su Keycloak e ottenere il token JWT locale.
+*   **`run_scenario.js`**: Esegue lo scenario di verifica (L'ente richiede accesso alla Top Layer).
+*   **`setup_storage.js`**: Carica un documento iniziale sulla Colored Chain per i test.
+*   **`deploy_top.js` & `deploy_colored.js`**: Script di deploy che generano automaticamente il file `config.json`.
 
 ---
 
 ## Guida all'Installazione
 
 ### Prerequisiti
-*   Node.js installato.
-*   Framework Hardhat configurato.
+*   Node.js & NPM
+*   Docker Desktop (per Keycloak)
 
-### 1. Avvio delle Blockchain Simulate
-Aprire due terminali separati per avviare le istanze locali di Ganache.
+### 1. Avvio dell'Infrastruttura
+Aprire due terminali separati.
 
-**Terminale A (Top Layer):**
+- Terminale A (Top Layer Blockchain): npx ganache --server.port 7545 --chain.chainId 1337 --chain.networkId 5777 --wallet.totalAccounts 10
+- Terminale B (Colored Chain Blockchain) npx ganache --server.port 7545 --chain.chainId 1337 --chain.networkId 5777 --wallet.totalAccounts 10
 
-npx ganache --server.port 7545 --chain.chainId 1337 --chain.networkId 5777 --wallet.totalAccounts 10
+### 2. Setup e Deploy
+In un terzo terminale eseguire la configurazione iniziale:
+- npx hardhat compile
+- npx hardhat run scripts/deploy_top.js --network topLayer
+- npx hardhat run scripts/deploy_colored.js --network coloredChain
 
-**Terminale B (Colored Chain):**
+Caricamento dati di test:
+- npx hardhat run scripts/setup_storage.js --network coloredChain
 
-npx ganache --server.port 8545 --chain.chainId 1337 --chain.networkId 5777 --wallet.totalAccounts 10
+### 3. Esecuzione della demo
+In un terminale avviare il middleware:
+- npx hardhat run scripts/middleware.js --network topLayer
 
-### 2. Pubblicazione dei contratti (Deploy)
-In un terzo terminale, eseguire i seguenti comandi per caricare gli smart contracts:
- - npx hardhat run scripts/deploy_top.js --network topLayer
- - npx hardhat run scripts/deploy_colored.js --network coloredChain
-Dopo il deploy, copiare gli indirizzi dei contratti generati e aggiornatli nelle costanti presenti nel file "middleware.js", "upload_data.js" e "verify_access.js".
+In un secondo terminale:
+1) Ci loggiamo: node scripts/iam_login.js francesco 1234 (esempio)
+2) run simulazione: npx hardhat run scripts/run_scenario.js --network topLayer
 
-### 3. Esecuzione della Demo (scenario)
+## Concetti chiave
+L'esecuzione dello Smart Contract sulla Colored Chain (recupero dati) è vincolata all'output positivo dello Smart Contract sulla Top Layer.
+Il sistema implementa una sicurezza granulare:
 
-1. Caricamento del dato: l'utente carica il certificato sulla blockchain di storage (colored chain)
-    - npx hardhat run scripts/upload_data.js --network coloredChain
-
-2. Avvio del middleware: avviare il servizio in ascolto. Il terminale rimarrà in ascolto di eventi
-    - npx hardhat run scripts/middleware.js --network topLayer
-
-3. Richiesta di verifica: apriamo un nuovo terminale, l'ente terzo richiede l'accesso sulla blockchain di governance (Top Layer)
-    - npx hardhat run scripts/verify_access.js --network topLayer
-
-Sul terminale del middleware verranno visualizzati i seguenti log in sequenza:
-1. Ricezione dell'evento dal top layer
-2. Conferma che l'accesso è consentito
-3. Attivazione della connessione verso la colored chain
-4. Recupero e visualizzazione dei dati del documento (link e descrizione)
-
-L'architettura garantisce che nessun attore possa interrogare direttamente i dati sensibili senza passare prima per il controllo dei permessi sulla top layer, simulando un sistema di sicurezza a livelli.
-
-### 4. Scenario avanzato con delega e scadenza
-Questo script simula un caso d'uso reale con due identità distinte e manipolazione temporale:
-1) L'owner delega l'università per una durata di 10 secondi
-2) L'università effettua un accesso immediato
-3) Il sistema simula un salto temporale sulla blockchain di 15 secondi
-4) L'università tenta un nuovo accesso a delega scaduta
+1. Livello Ente (Smart Contract): L'Università ha il permesso di accedere ai dati?
+2. Livello Utente (Keycloak): La persona specifica dentro l'Università è autorizzata?
+Solo se entrambi i livelli danno "Sì", il dato viene decifrato/restituito.

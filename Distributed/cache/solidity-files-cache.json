@@ -1,8 +1,8 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "/Users/antonio/Desktop/UNI/Distributed/contracts/delegationHub.sol": {
-      "lastModificationDate": 1767357004320,
+    "/Users/antonio/Desktop/Blockchain-based-Multi-Layer-Authorization-System/Distributed/contracts/delegationHub.sol": {
+      "lastModificationDate": 1767369011334,
       "contentHash": "b6fc1414b931dd65d8007a7ed8e70c2f",
       "sourceName": "contracts/delegationHub.sol",
       "solcConfig": {
@@ -37,9 +37,9 @@
         "DelegationHub"
       ]
     },
-    "/Users/antonio/Desktop/UNI/Distributed/contracts/entityStorage.sol": {
-      "lastModificationDate": 1767346661075,
-      "contentHash": "393c45dddd600e07d4e7f99f97f15bf5",
+    "/Users/antonio/Desktop/Blockchain-based-Multi-Layer-Authorization-System/Distributed/contracts/entityStorage.sol": {
+      "lastModificationDate": 1767636152331,
+      "contentHash": "79ff0e35fd4c35d83507f151f8979eb9",
       "sourceName": "contracts/entityStorage.sol",
       "solcConfig": {
         "version": "0.8.24",

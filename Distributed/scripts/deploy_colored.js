@@ -1,18 +1,19 @@
 const hre = require("hardhat");
+const fs = require("fs");
 
 async function main() {
-  console.log("Inizio il deploy su COLORED CHAIN...");
-
   const EntityStorage = await hre.ethers.getContractFactory("EntityStorage");
   const contract = await EntityStorage.deploy();
-
   await contract.waitForDeployment();
+  const address = contract.target;
+  console.log("EntityStorage (Colored) address:", address);
 
-  console.log("EntityStorage deployato con successo!");
-  console.log("INDIRIZZO CONTRATTO (Salviamolo):", contract.target);
+  let config = {};
+  if (fs.existsSync("config.json")) {
+    config = JSON.parse(fs.readFileSync("config.json"));
+  }
+  config.coloredChain = address; // Aggiorniamo solo la colored chain
+  fs.writeFileSync("config.json", JSON.stringify(config, null, 2));
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch((error) => { console.error(error); process.exitCode = 1; });
