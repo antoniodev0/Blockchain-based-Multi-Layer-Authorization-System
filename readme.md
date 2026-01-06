@@ -43,6 +43,7 @@ Il sistema si compone di quattro pilastri fondamentali:
 ### Prerequisiti
 *   Node.js & NPM
 *   Docker Desktop (per Keycloak)
+*   npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox (usare la versione 2.22.0)
 
 ### 1. Avvio dell'Infrastruttura
 Aprire due terminali separati.
