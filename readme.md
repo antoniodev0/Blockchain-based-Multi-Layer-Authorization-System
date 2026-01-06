@@ -1,100 +1,100 @@
 # Blockchain-based Multi-Layer Authorization System
 
-Questo progetto implementa un'architettura Cross-Chain integrata con un sistema IAM (Identity and Access Management) per la gestione sicura di dati sensibili. Utilizza un paradigma a livelli che separa la governance, lo storage dei dati e l'identità degli utenti fisici.
+This project implements a Cross-Chain architecture integrated with an IAM (Identity and Access Management) system for secure management of sensitive data. It uses a layered paradigm that separates governance, data storage, and physical user identity.
 
-## Architettura del Sistema
+## System Architecture
 
-Il sistema si compone di quattro pilastri fondamentali:
+The system consists of four fundamental pillars:
 
-1.  **Top Layer (Governance Chain - Porta 7545)**
-    *   Blockchain pubblica (simulata) per la gestione delle deleghe tra enti.
-    *   Ospita lo Smart Contract `DelegationHub`.
+1.  **Top Layer (Governance Chain - Port 7545)**
+    *   Public (simulated) blockchain for managing delegations between entities.
+    *   Hosts the `DelegationHub` Smart Contract.
 
-2.  **Colored Chain (Data Chain - Porta 8545)**
-    *   Blockchain privata per lo storage dei metadati documentali.
-    *   Ospita lo Smart Contract `EntityStorage` (include Hash IPFS e MD5).
+2.  **Colored Chain (Data Chain - Port 8545)**
+    *   Private blockchain for document metadata storage.
+    *   Hosts the `EntityStorage` Smart Contract (includes IPFS Hash and MD5).
 
 3.  **Identity Provider (Keycloak - Docker)**
-    *   Gestisce l'autenticazione degli utenti fisici (es. dipendenti dell'ente).
-    *   Fornisce token JWT con ruoli specifici (es. `admin_documenti`, `stagista`).
+    *   Manages authentication of physical users (e.g., entity employees).
+    *   Provides JWT tokens with specific roles (e.g., `admin_documenti`, `stagista`).
 
 4.  **Middleware (Pipeline Bridge)**
-    *   Servizio Node.js che orchestra il flusso. Ascolta la Blockchain, verifica il Token IAM dell'utente e, solo se entrambi i controlli passano, recupera i dati dallo storage.
+    *   Node.js service that orchestrates the flow. It listens to the Blockchain, verifies the user's IAM Token, and only if both checks pass, retrieves the data from storage.
 
 ---
 
-## Struttura del Progetto e Descrizione File
+## Project Structure and File Description
 
-### Smart Contracts (Cartella `contracts/`)
-*   **`DelegationHub.sol`**: Gestisce le deleghe temporali multilivello. Emette l'evento `AccessCheckResult` usato come trigger.
-*   **`EntityStorage.sol`**: Registro immutabile dei documenti. Salva Link IPFS, Hash MD5 e Descrizione.
+### Smart Contracts (`contracts/` folder)
+*   **`DelegationHub.sol`**: Manages multi-level temporal delegations. Emits the `AccessCheckResult` event used as a trigger.
+*   **`EntityStorage.sol`**: Immutable document registry. Stores IPFS Link, MD5 Hash, and Description.
 
-### Script Operativi (Cartella `scripts/`)
-*   **`middleware.js`**: Il cuore del sistema. Unisce il mondo Blockchain con quello IAM.
-*   **`iam_login.js`**: Client per effettuare il login su Keycloak e ottenere il token JWT locale.
-*   **`run_scenario.js`**: Esegue lo scenario di verifica (L'ente richiede accesso alla Top Layer).
-*   **`setup_storage.js`**: Carica un documento iniziale sulla Colored Chain per i test.
-*   **`deploy_top.js` & `deploy_colored.js`**: Script di deploy che generano automaticamente il file `config.json`.
+### Operational Scripts (`scripts/` folder)
+*   **`middleware.js`**: The heart of the system. Bridges the Blockchain world with IAM.
+*   **`iam_login.js`**: Client for logging into Keycloak and obtaining a local JWT token.
+*   **`run_scenario.js`**: Executes the verification scenario (The entity requests access to the Top Layer).
+*   **`setup_storage.js`**: Loads an initial document to the Colored Chain for testing.
+*   **`deploy_top.js` & `deploy_colored.js`**: Deployment scripts that automatically generate the `config.json` file.
 
 ---
 
-## Guida all'Installazione
+## Installation Guide
 
-### Prerequisiti
+### Prerequisites
 *   Node.js & NPM
-*   Docker Desktop (per Keycloak)
-*   npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox (usare la versione 2.22.0)
+*   Docker Desktop (for Keycloak)
+*   npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox (use version 2.22.0)
 
-### Configurazione Keycloak
-Una volta avviato Docker, è necessario configurare il realm e gli utenti.
-1.  Accedere a **http://localhost:8080** (Username: `admin`, Password: `admin`).
-2.  **Creare il Realm**:
-    *   Cliccare sul menu a tendina in alto a sinistra (dove dice "Keycloak").
-    *   Cliccare **Create Realm**.
-    *   Nome: `unime-realm`. Cliccare **Create**.
-3.  **Creare il Client**:
-    *   Menu laterale **Clients** -> **Create client**.
+### Keycloak Configuration
+Once Docker is started, you need to configure the realm and users.
+1.  Access **http://localhost:8080** (Username: `admin`, Password: `admin`).
+2.  **Create the Realm**:
+    *   Click on the dropdown menu in the top left corner (where it says "Keycloak").
+    *   Click **Create Realm**.
+    *   Name: `unime-realm`. Click **Create**.
+3.  **Create the Client**:
+    *   Side menu **Clients** -> **Create client**.
     *   Client ID: `blockchain-app`.
-    *   Cliccare **Next** due volte e poi **Save**.
-    *   Nel tab **Settings** del client appena creato, assicurarsi che **Direct access grants** sia su **On** (necessario per il login da terminale). Cliccare **Save**.
-4.  **Creare i Ruoli**:
-    *   Menu laterale **Realm roles** -> **Create role**.
-    *   Nome: `admin_documenti`. Salva.
-    *   Creare un secondo ruolo nome: `stagista`. Salva.
-5.  **Creare gli Utenti**:
-    *   Menu laterale **Users** -> **Add user**.
-    *   Username: `y`. Cliccare **Create**.
-    *   Tab **Credentials** -> **Set password** -> Inserire `abc` (disattivare "Temporary") -> Save.
-    *   Tab **Role mapping** -> **Assign role** -> Selezionare `admin_documenti` -> Assign.
-    *   Ripetere la procedura per l'utente `x` con password `xyz` assegnando il ruolo `stagista`.
+    *   Click **Next** twice and then **Save**.
+    *   In the **Settings** tab of the newly created client, ensure that **Direct access grants** is **On** (required for terminal login). Click **Save**.
+4.  **Create the Roles**:
+    *   Side menu **Realm roles** -> **Create role**.
+    *   Name: `admin_documenti`. Save.
+    *   Create a second role named: `stagista`. Save.
+5.  **Create the Users**:
+    *   Side menu **Users** -> **Add user**.
+    *   Username: `y`. Click **Create**.
+    *   **Credentials** tab -> **Set password** -> Enter `abc` (disable "Temporary") -> Save.
+    *   **Role mapping** tab -> **Assign role** -> Select `admin_documenti` -> Assign.
+    *   Repeat the procedure for user `x` with password `xyz` assigning the `stagista` role.
 
-### 1. Avvio dell'Infrastruttura
-Aprire due terminali separati.
+### 1. Starting the Infrastructure
+Open two separate terminals.
 
-- Terminale A (Top Layer Blockchain): npx ganache --server.port 7545 --chain.chainId 1337 --chain.networkId 5777 --wallet.totalAccounts 10
-- Terminale B (Colored Chain Blockchain) npx ganache --server.port 7545 --chain.chainId 1337 --chain.networkId 5777 --wallet.totalAccounts 10
+- Terminal A (Top Layer Blockchain): npx ganache --server.port 7545 --chain.chainId 1337 --chain.networkId 5777 --wallet.totalAccounts 10
+- Terminal B (Colored Chain Blockchain): npx ganache --server.port 8545 --chain.chainId 1338 --chain.networkId 5778 --wallet.totalAccounts 10
 
-### 2. Setup e Deploy
-In un terzo terminale eseguire la configurazione iniziale:
+### 2. Setup and Deploy
+In a third terminal, execute the initial configuration:
 - npx hardhat compile
 - npx hardhat run scripts/deploy_top.js --network topLayer
 - npx hardhat run scripts/deploy_colored.js --network coloredChain
 
-Caricamento dati di test:
+Loading test data:
 - npx hardhat run scripts/setup_storage.js --network coloredChain
 
-### 3. Esecuzione della demo
-In un terminale avviare il middleware:
+### 3. Running the Demo
+In one terminal, start the middleware:
 - npx hardhat run scripts/middleware.js --network topLayer
 
-In un secondo terminale:
-1) Ci loggiamo: node scripts/iam_login.js francesco 1234 (esempio)
-2) run simulazione: npx hardhat run scripts/run_scenario.js --network topLayer
+In a second terminal:
+1) Login: node scripts/iam_login.js francesco 1234 (example)
+2) Run simulation: npx hardhat run scripts/run_scenario.js --network topLayer
 
-## Concetti chiave
-L'esecuzione dello Smart Contract sulla Colored Chain (recupero dati) è vincolata all'output positivo dello Smart Contract sulla Top Layer.
-Il sistema implementa una sicurezza granulare:
+## Key Concepts
+The execution of the Smart Contract on the Colored Chain (data retrieval) is contingent upon a positive output from the Smart Contract on the Top Layer.
+The system implements granular security:
 
-1. Livello Ente (Smart Contract): L'Università ha il permesso di accedere ai dati?
-2. Livello Utente (Keycloak): La persona specifica dentro l'Università è autorizzata?
-Solo se entrambi i livelli danno "Sì", il dato viene decifrato/restituito.
+1. Entity Level (Smart Contract): Does the University have permission to access the data?
+2. User Level (Keycloak): Is the specific person within the University authorized?
+Only if both levels answer "Yes" is the data decrypted/returned.

@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 async function checkUser(token) {
     try {
-        // 1. Decodifica il token senza verificare la firma (per velocità in locale)
+        // 1. Decode the token without verifying the signature (for local speed)
         const decoded = jwt.decode(token);
 
         if (!decoded) {
@@ -10,28 +10,28 @@ async function checkUser(token) {
             return { authorized: false, role: "INVALID_TOKEN" };
         }
 
-        // 2. Estrazione dati dal JSON che mi hai mostrato
-        const username = decoded.preferred_username; // es: "francesco"
+        // 2. Extract data from the JSON
+        const username = decoded.preferred_username; // e.g.: "francesco"
         
-        // Safety check: controlliamo se esiste l'oggetto realm_access e l'array roles
+        // Safety check: verify if the realm_access object and roles array exist
         const roles = (decoded.realm_access && decoded.realm_access.roles) ? decoded.realm_access.roles : [];
 
         console.log(`   [IAM] Utente identificato: ${username}`);
         console.log(`   [IAM] Ruoli rilevati: [${roles.join(", ")}]`);
 
-        // 3. LOGICA DI CONTROLLO (RBAC Reale)
-        // Non importa se ti chiami Francesco o Maria. Importa se hai il ruolo.
+        // 3. CONTROL LOGIC (Real RBAC)
+        // It doesn't matter if your name is Francesco or Maria. What matters is if you have the role.
         
         if (roles.includes("admin_documenti")) {
-            // Successo!
+            // Success!
             return { authorized: true, role: "ADMIN_DOCUMENTI" };
         } 
         else if (roles.includes("stagista")) {
-            // Fallimento specifico per stagisti
+            // Specific failure for interns
             return { authorized: false, role: "STAGISTA" };
         } 
         else {
-            // Fallimento generico
+            // Generic failure
             return { authorized: false, role: "NESSUN_RUOLO_VALIDO" };
         }
 

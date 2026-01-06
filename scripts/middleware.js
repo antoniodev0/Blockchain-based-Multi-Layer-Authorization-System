@@ -1,6 +1,6 @@
 const hre = require("hardhat");
 const fs = require("fs");
-const iam = require("./iam_check"); // Usa la libreria IAM
+const iam = require("./iam_check"); // Use the IAM library
 
 async function main() {
   const config = JSON.parse(fs.readFileSync("config.json"));
@@ -15,12 +15,12 @@ async function main() {
   const topContract = new hre.ethers.Contract(config.topLayer, TopArtifact.abi, providerTop);
   const colContract = new hre.ethers.Contract(config.coloredChain, ColArtifact.abi, providerCol);
 
-  console.log("📡 MIDDLEWARE ATTIVO (Blockchain + Keycloak)...");
+  console.log("MIDDLEWARE ATTIVO (Blockchain + Keycloak)...");
 
   // LISTENER
   topContract.on("AccessCheckResult", async (txHash, requestor, allowed) => {
     if (!allowed) {
-        console.log(`⛔ BLOCKCHAIN: Accesso negato dallo Smart Contract per ${requestor}`);
+        console.log(`BLOCKCHAIN: Accesso negato dallo Smart Contract per ${requestor}`);
         return;
     }
 
@@ -36,7 +36,7 @@ async function main() {
     const check = await iam.checkUser(token);
 
     if (check.authorized) {
-        console.log(`✅ IAM: Utente autorizzato (${check.role}). Recupero dati...`);
+        console.log(`IAM: Utente autorizzato (${check.role}). Recupero dati...`);
         try {
             const doc = await colContract.getDocument(txHash);
             console.log("DATI RESTITUITI ALL'UTENTE:");

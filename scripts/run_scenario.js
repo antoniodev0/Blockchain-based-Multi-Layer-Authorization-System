@@ -14,13 +14,13 @@ async function main() {
 
   console.log("--- INIZIO SCENARIO ---");
 
-  // 1. Mario delega l'Università (1 ora)
+  // 1. Mario delegates to the University (1 hour)
   console.log(" Mario concede delega all'Università...");
   const txGrant = await contract.connect(owner).grantAccess(DOC_ID, university.address, 3600, 1);
   await txGrant.wait();
-  console.log("   ✅ Delega registrata on-chain.");
+  console.log("   Delega registrata on-chain.");
 
-  // 2. L'Università richiede l'accesso
+  // 2. The University requests access
   console.log("Università richiede verifica accesso...");
   const txVerify = await contract.connect(university).verifyDocumentAccess(DOC_ID);
   await txVerify.wait();

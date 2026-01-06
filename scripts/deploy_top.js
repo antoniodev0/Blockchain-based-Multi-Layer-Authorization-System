@@ -8,12 +8,12 @@ async function main() {
   const address = contract.target;
   console.log("DelegationHub (Top) address:", address);
 
-  // LEGGIAMO O CREIAMO IL CONFIG
+  // READ OR CREATE THE CONFIG
   let config = {};
   if (fs.existsSync("config.json")) {
     config = JSON.parse(fs.readFileSync("config.json"));
   }
-  config.topLayer = address; // Aggiorniamo solo il top layer
+  config.topLayer = address; // Update only the top layer
   fs.writeFileSync("config.json", JSON.stringify(config, null, 2));
 }
 

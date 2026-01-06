@@ -12,7 +12,7 @@ async function main() {
   if (fs.existsSync("config.json")) {
     config = JSON.parse(fs.readFileSync("config.json"));
   }
-  config.coloredChain = address; // Aggiorniamo solo la colored chain
+  config.coloredChain = address; // Update only the colored chain
   fs.writeFileSync("config.json", JSON.stringify(config, null, 2));
 }
 
