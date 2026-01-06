@@ -33,6 +33,7 @@ The system consists of four fundamental pillars:
 *   **`middleware.js`**: The heart of the system. Bridges the Blockchain world with IAM.
 *   **`iam_login.js`**: Client for logging into Keycloak and obtaining a local JWT token.
 *   **`run_scenario.js`**: Executes the verification scenario (The entity requests access to the Top Layer).
+*   **`scenario_expiration.js`**: Advanced scenario demonstrating temporal delegation expiration with EVM time manipulation.
 *   **`setup_storage.js`**: Loads an initial document to the Colored Chain for testing.
 *   **`deploy_top.js` & `deploy_colored.js`**: Deployment scripts that automatically generate the `config.json` file.
 
@@ -90,6 +91,17 @@ In one terminal, start the middleware:
 In a second terminal:
 1) Login: node scripts/iam_login.js francesco 1234 (example)
 2) Run simulation: npx hardhat run scripts/run_scenario.js --network topLayer
+
+### 4. Advanced Scenario: Delegation Expiration
+To test temporal delegation expiration:
+- Ensure the middleware is running
+- Run: npx hardhat run scripts/scenario_expiration.js --network topLayer
+
+This scenario demonstrates:
+- Granting a 10-second delegation
+- Successful access verification within the time window
+- EVM time manipulation to advance beyond expiration
+- Failed access attempt after delegation expires
 
 ## Key Concepts
 The execution of the Smart Contract on the Colored Chain (data retrieval) is contingent upon a positive output from the Smart Contract on the Top Layer.
