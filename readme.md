@@ -45,6 +45,29 @@ Il sistema si compone di quattro pilastri fondamentali:
 *   Docker Desktop (per Keycloak)
 *   npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox (usare la versione 2.22.0)
 
+### Configurazione Keycloak
+Una volta avviato Docker, è necessario configurare il realm e gli utenti.
+1.  Accedere a **http://localhost:8080** (Username: `admin`, Password: `admin`).
+2.  **Creare il Realm**:
+    *   Cliccare sul menu a tendina in alto a sinistra (dove dice "Keycloak").
+    *   Cliccare **Create Realm**.
+    *   Nome: `unime-realm`. Cliccare **Create**.
+3.  **Creare il Client**:
+    *   Menu laterale **Clients** -> **Create client**.
+    *   Client ID: `blockchain-app`.
+    *   Cliccare **Next** due volte e poi **Save**.
+    *   Nel tab **Settings** del client appena creato, assicurarsi che **Direct access grants** sia su **On** (necessario per il login da terminale). Cliccare **Save**.
+4.  **Creare i Ruoli**:
+    *   Menu laterale **Realm roles** -> **Create role**.
+    *   Nome: `admin_documenti`. Salva.
+    *   Creare un secondo ruolo nome: `stagista`. Salva.
+5.  **Creare gli Utenti**:
+    *   Menu laterale **Users** -> **Add user**.
+    *   Username: `y`. Cliccare **Create**.
+    *   Tab **Credentials** -> **Set password** -> Inserire `abc` (disattivare "Temporary") -> Save.
+    *   Tab **Role mapping** -> **Assign role** -> Selezionare `admin_documenti` -> Assign.
+    *   Ripetere la procedura per l'utente `x` con password `xyz` assegnando il ruolo `stagista`.
+
 ### 1. Avvio dell'Infrastruttura
 Aprire due terminali separati.
 
